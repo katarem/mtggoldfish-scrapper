@@ -8,6 +8,7 @@ A Node.js application that scrapes Commander deck lists from MTGGoldfish.com and
 - Configurable number of pages to scrape via command line argument
 - Returns a random deck URL from the collected decks
 - Uses Puppeteer for web scraping
+- Global CLI command support
 
 ## Prerequisites
 
@@ -16,28 +17,45 @@ A Node.js application that scrapes Commander deck lists from MTGGoldfish.com and
 
 ## Installation
 
+### Local Installation
+
 1. Clone the repository
 2. Install dependencies:
-
 ```bash
 npm install
 ```
 
+### Global Installation
+
+To use the tool from anywhere in your command line:
+
+```bash
+npm install -g .
+```
+
 ## Usage
 
-Run the application using:
+### As a local package:
 
 ```bash
 npm start [pages]
 ```
 
-Where `[pages]` is an optional argument to specify the number of pages to scrape. If not provided, it defaults to 1 page.
+### As a global command:
+
+After global installation, you can use the `rdeck` command from anywhere:
+
+```bash
+rdeck [pages]
+```
+
+Where `[pages]` is an optional argument to specify the number of pages to scrape. If not provided, it defaults to 5 pages.
 
 Examples:
 ```bash
-npm start     # Scrapes 1 page (default)
-npm start 10  # Scrapes 10 pages
-npm start 5   # Scrapes 5 pages
+rdeck      # Scrapes 5 pages (default)
+rdeck 10   # Scrapes 10 pages
+rdeck 1    # Scrapes just 1 page
 ```
 
 The script will:
@@ -48,8 +66,9 @@ The script will:
 
 ## Project Structure
 
-- index.js - Main entry point
-- functions.js - Core scraping functionality
+- src/
+  - index.js - Main entry point and CLI command
+  - functions.js - Core scraping functionality
 - package.json - Project configuration and dependencies
 
 ## Dependencies
