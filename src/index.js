@@ -1,5 +1,18 @@
+#!/usr/bin/env node
+
 import { getRandomDeck } from "./functions.js";
 
-const randomDeck = await getRandomDeck(5);
+try {
+    const pages = process.argv[2] ? Number.parseInt(process.argv[2]) : 1;
 
-console.log('Deck elegido:',randomDeck);
+    if (isNaN(pages) || pages <= 0) {
+        throw new Error('Invalid number of pages. Please provide a positive integer.');
+    }
+
+    const randomDeck = await getRandomDeck(pages);
+
+    console.log('Chosen deck:', randomDeck);
+} catch (e) {
+    console.error('Could not get a random deck:', e);
+    process.exit(1);
+}

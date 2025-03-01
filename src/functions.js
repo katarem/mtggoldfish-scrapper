@@ -7,7 +7,7 @@ const getDecks = async (numPage, page) => {
         return Array.from(document.querySelectorAll('.archetype-tile'))
             .map(deck => deck.querySelector('a').href);
     });
-    console.log(`Pagina ${numPage}: ${decks.length} decks`)
+    console.log(`Page ${numPage}: ${decks.length} decks`)
     return decks;
 }
 
@@ -20,7 +20,7 @@ const getRandomDeck = async (numPages) => {
         const pageDecks = await getDecks(index, page);
         pageDecks.forEach(deck => decks.push(deck));
     }
-    console.log('Decks obtenidos:',decks.length)
+    console.log('Obtained decks:',decks.length)
     const randomDeckNumber = Math.floor(Math.random() * decks.length);
     const randomDeck = decks[randomDeckNumber];
     browser.close();
