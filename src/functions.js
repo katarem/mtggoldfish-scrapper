@@ -1,5 +1,6 @@
 import puppeteer, { Browser } from 'puppeteer';
-
+import fs from 'fs';
+import { randomUUID } from 'crypto';
 const browser = undefined;
 const getBrowser = async () => {
     if (!browser) {
@@ -153,5 +154,51 @@ const getDeckWithLevel = async (deck, page) => {
     return stats;
 }
 
+const getSavedDecks = async () => {
+    const userDecks =
+        fs.existsSync(paths.userDecks) 
+        ? JSON.parse(fs.readFileSync(paths.userDecks))
+        : {}
+    return userDecks;
+}
 
-export { getRandomDeck, getDeckWithLevel, getRandomDeckByLevel };
+const saveDeck = async (name, deckURL, page) => {
+    const deck = await getDeckWithLevel(deckURL, page);
+    const userDecks = JSON.parse(fs.readFileSync(paths.userDecks));
+    const id = name ? name : randomUUID().toString();
+    userDecks = {
+        ...userDecks,
+        [id]: deck,
+    }
+}
+
+const getSavedDeck = async (name) => {
+    const userDecks = JSON.parse(fs.readFileSync(paths.userDecks));
+    if(!userDecks[name])
+        return `Deck not found: ${name}`;
+    return {
+        name,
+        ...userDecks[name]
+    };
+}
+
+const deleteSavedDeck = async (name) => {
+    const userDecks = JSON.parse(fs.readFileSync(paths.userDecks));
+    if(!userDecks[name])
+        return 'Deck not found';
+    delete userDecks[name];
+    fs.writeFileSync(paths.userDecks, JSON.stringify(userDecks));
+    return `Deck deleted: ${name}`;
+}
+
+const updateSavedDeck = async (name, deckURL, page) => {
+    const deck = await getDeckWithLevel(deckURL, page);
+    const userDecks = JSON.parse(fs.readFileSync(paths.userDecks));
+    if(!userDecks[name])
+        return 'Deck not found with that name';
+    userDecks[name] = deck;
+    fs.writeFileSync(paths.userDecks, JSON.stringify(userDecks));
+    return `Deck updated: ${name}`;
+}
+
+export { getRandomDeck, getDeckWithLevel, getRandomDeckByLevel, getSavedDeck, getSavedDecks, deleteSavedDeck, updateSavedDeck, saveDeck};

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { getRandomDeck, getRandomDeckByLevel, getDeckWithLevel } from "./functions.js";
+import { getRandomDeck, getRandomDeckByLevel, getDeckWithLevel, getSavedDeck, deleteSavedDeck, updateSavedDeck } from "./functions.js";
 
 
 const program = new Command();
@@ -13,38 +13,62 @@ program.name("mtg-random-deck")
 
 program
     .command("level")
-    .argument('<pages>', 'Number of pages to search for a deck')
-    .argument('<level>', 'Level of the deck')
-    .action(async (pages_arg, level_arg) => {
-        const pages = pages_arg ? Number.parseInt(pages_arg) : 1;
-        const level = level_arg ? Number.parseInt(level_arg) : 3;
-
-        if (isNaN(pages) || pages <= 0) {
-            throw new Error('Invalid number of pages. Please provide a positive integer.');
-        }
-
-        if (isNaN(level) || level > 10 || pages < 1) {
-            throw new Error('Invalid number of level. Please provide a number between 1 and 10.');
-
-        }
+    .description('Get a deck with specified level from mtggoldfish.com')
+    .argument('<pages>', 'Number of pages to search for a deck', parseInt, 1)
+    .argument('<level>', 'Level of the deck', parseInt, 3)
+    .action(async (pages, level) => {
         const deck = await getRandomDeckByLevel(pages, level);
         console.log('Obtained deck:',deck);
     });
 
 program
     .command("random")
-    .argument('<pages>', 'Number of pages to search for a deck')
-    .action(async (pages_arg) => {
-        const pages = pages_arg? Number.parseInt(pages_arg) : 1;
-        if (isNaN(pages) || pages <= 0) {
-            throw new Error('Invalid number of pages. Please provide a positive integer.');
-        }
+    .description('Get a random deck from mtggoldfish.com')
+    .argument('<pages>', 'Number of pages to search for a deck', parseInt, 1)
+    .action(async (pages) => {
         const deck = await getRandomDeck(pages);
         console.log('Obtained deck:',deck);
     });    
 
+program
+    .command("saved")
+    .description('get a saved deck with specified name')
+    .argument('<name>', 'name of the saved deck')
+    .action(async (name_arg) => {
+        const name = name_arg;
+        console.log(await getSavedDeck(name));
+    });
 
 
+program
+    .command("save")
+    .description('save a deck from mtggoldfish.com')
+    .argument('<url>', 'url of the deck')
+    .option('-n, --name <name>', 'name of the deck to save')
+    .action(async (url_arg, options) => {
+        const url = url_arg;
+        const name = options.name;
+        console.log(await saveDeck(url, name));
+    });
 
+program
+    .command("delete")
+    .description('deletes a saved deck')
+    .argument('<name>', 'name of the saved deck')
+    .action(async (name_arg) => {
+        const name = name_arg;
+        console.log(await deleteSavedDeck(name));
+    });
+
+program
+    .command("update")
+    .description('updates a saved deck')
+    .argument('<name>', 'name of the saved deck')
+    .argument('<url>', 'url of the deck')
+    .action(async (name_arg, url_arg) => {
+        const name = name_arg;
+        const url = url_arg;
+        console.log(await updateSavedDeck(name, url));
+    });
 
 program.parse();

@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "commander": "^13.1.0",
+    "mtggoldfish-scrapper": "file:",
     "puppeteer": "^24.3.0"
   },
   "bin": {
