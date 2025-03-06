@@ -1,6 +1,7 @@
-import puppeteer, { Browser } from 'puppeteer';
+import puppeteer from 'puppeteer';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
+import { getFileDecks, saveToFile } from './paths.js';
 const browser = undefined;
 const getBrowser = async () => {
     if (!browser) {
@@ -40,7 +41,6 @@ const getRandomDeck = async (numPages) => {
 
 const getRandomDeckByLevel = async (numPages, level) => {
     const browser = await getBrowser();
-    const decks = [];
     
     // Obtener todos los links de decks primero
     const goldfish = await browser.newPage();
@@ -155,25 +155,26 @@ const getDeckWithLevel = async (deck, page) => {
 }
 
 const getSavedDecks = async () => {
-    const userDecks =
-        fs.existsSync(paths.userDecks) 
-        ? JSON.parse(fs.readFileSync(paths.userDecks))
-        : {}
-    return userDecks;
+    return await getFileDecks();
 }
 
-const saveDeck = async (name, deckURL, page) => {
+const saveDeck = async (name, deckURL) => {
+    const browser = await getBrowser();
+    const page = await browser.newPage();
     const deck = await getDeckWithLevel(deckURL, page);
-    const userDecks = JSON.parse(fs.readFileSync(paths.userDecks));
+    let userDecks = await getFileDecks();
     const id = name ? name : randomUUID().toString();
     userDecks = {
         ...userDecks,
         [id]: deck,
     }
+    browser.close();
+    await saveToFile(userDecks);
+    return `Deck saved: ${id}`;
 }
 
 const getSavedDeck = async (name) => {
-    const userDecks = JSON.parse(fs.readFileSync(paths.userDecks));
+    const userDecks = await getFileDecks();
     if(!userDecks[name])
         return `Deck not found: ${name}`;
     return {
@@ -183,21 +184,24 @@ const getSavedDeck = async (name) => {
 }
 
 const deleteSavedDeck = async (name) => {
-    const userDecks = JSON.parse(fs.readFileSync(paths.userDecks));
+    const userDecks = await getFileDecks();
     if(!userDecks[name])
         return 'Deck not found';
     delete userDecks[name];
-    fs.writeFileSync(paths.userDecks, JSON.stringify(userDecks));
+    await saveToFile(userDecks);
     return `Deck deleted: ${name}`;
 }
 
-const updateSavedDeck = async (name, deckURL, page) => {
+const updateSavedDeck = async (name, deckURL) => {
+    const browser = await getBrowser();
+    const page = await browser.newPage();
     const deck = await getDeckWithLevel(deckURL, page);
-    const userDecks = JSON.parse(fs.readFileSync(paths.userDecks));
+    const userDecks = await getFileDecks();
     if(!userDecks[name])
         return 'Deck not found with that name';
     userDecks[name] = deck;
-    fs.writeFileSync(paths.userDecks, JSON.stringify(userDecks));
+    browser.close();
+    await saveToFile(userDecks);
     return `Deck updated: ${name}`;
 }
 
