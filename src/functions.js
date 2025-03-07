@@ -39,50 +39,53 @@ const getRandomDeck = async (numPages) => {
     return randomDeck;
 }
 
-const getRandomDeckByLevel = async (numPages, level) => {
+const getDecksByLevel = async (numPages, level) => {
     const browser = await getBrowser();
-    
-    // Obtener todos los links de decks primero
+
     const goldfish = await browser.newPage();
     const allDeckUrls = [];
-    
+
     for (let index = 1; index < numPages + 1; index++) {
         const pageDecks = await getDecks(index, goldfish);
         allDeckUrls.push(...pageDecks);
     }
     console.log('Total deck URLs found:', allDeckUrls.length);
 
-    // Crear un pool de páginas para procesar los niveles en paralelo
-    const MAX_CONCURRENT = 10; // Ajusta este número según tu CPU/memoria
+    const MAX_CONCURRENT = 10;
     const pages = await Promise.all(
         Array(MAX_CONCURRENT).fill(0).map(() => browser.newPage())
     );
 
-    // Procesar los decks en chunks
     const chunkSize = Math.ceil(allDeckUrls.length / MAX_CONCURRENT);
-    const chunks = Array(MAX_CONCURRENT).fill().map((_, index) => 
+    const chunks = Array(MAX_CONCURRENT).fill().map((_, index) =>
         allDeckUrls.slice(index * chunkSize, (index + 1) * chunkSize)
     );
 
     try {
         const results = await Promise.all(
-            chunks.map((chunk, index) => 
+            chunks.map((chunk, index) =>
                 processChunk(chunk, pages[index], level)
             )
         );
-
-        // Combinar resultados
-        const filteredDecks = results.flat().filter(deck => deck && deck.level === level);
-        console.log('Decks of level', level + ':', filteredDecks.length);
-
-        const randomDeckNumber = Math.floor(Math.random() * filteredDecks.length);
-        return filteredDecks[randomDeckNumber];
+        let filteredDecks;
+        if (level > 0) {
+            filteredDecks = results.flat().filter(deck => deck && deck.level === level);
+            console.log('Decks of level', level + ':', filteredDecks.length);
+        } else {
+            filteredDecks = results.flat().filter(deck => deck);
+        }
+        return filteredDecks;
     } finally {
-        // Cerrar todas las páginas y el navegador
         await Promise.all(pages.map(page => page.close()));
         await browser.close();
     }
 };
+
+const getRandomDeckByLevel = async (numPages, level) => {
+    const decks = await getDecksByLevel(numPages, level);
+    const randomDeckNumber = Math.floor(Math.random() * decks.length);
+    return decks[randomDeckNumber];
+}
 
 // Función auxiliar para procesar un chunk de URLs
 const processChunk = async (urls, page, targetLevel) => {
@@ -90,7 +93,7 @@ const processChunk = async (urls, page, targetLevel) => {
     for (const url of urls) {
         try {
             const deckWithLevel = await getDeckWithLevel(url, page);
-            if (deckWithLevel.level === targetLevel) {
+            if (targetLevel === 0 || deckWithLevel.level === targetLevel) {
                 results.push(deckWithLevel);
             }
         } catch (error) {
@@ -136,13 +139,15 @@ const getDeckWithLevel = async (deck, page) => {
             .map(e => e.textContent)
     });
 
+    const deckType = gradesScore[4].replace('MIDRANGE /', '').trim();
 
+    const deckLink = deck.endsWith('#paper') ? deck : deck + '#paper';
     const stats = {
-        link: deck,
+        link: deckLink,
         user: commanderInfo[1],
         commander: commanderInfo[2],
         level,
-        type: gradesScore[4],
+        type: deckType,
         grades: {
             saltiness: `${grades[0]} ${gradesScore[0]}`,
             interaction: `${grades[1]} ${gradesScore[1]}`,
@@ -154,8 +159,27 @@ const getDeckWithLevel = async (deck, page) => {
     return stats;
 }
 
-const getSavedDecks = async () => {
-    return await getFileDecks();
+const getSavedDecks = async (options) => {
+    const deckMap = await getFileDecks();
+    let filteredDeckMap = { ...deckMap };
+
+    if (options.commander) {
+        filteredDeckMap = Object.fromEntries(
+            Object.entries(filteredDeckMap).filter(([_, deck]) => deck.commander.toLowerCase().includes(options.commander.toLowerCase()))
+        );
+    }
+    if (options.level) {
+        filteredDeckMap = Object.fromEntries(
+            Object.entries(filteredDeckMap).filter(([_, deck]) => deck.level === options.level)
+        );
+    }
+    if (options.type) {
+        filteredDeckMap = Object.fromEntries(
+            Object.entries(filteredDeckMap).filter(([_, deck]) => deck.type.toLowerCase().includes(options.type.toLowerCase()))
+        );
+    }
+
+    return filteredDeckMap;
 }
 
 const saveDeck = async (name, deckURL) => {
@@ -175,7 +199,7 @@ const saveDeck = async (name, deckURL) => {
 
 const getSavedDeck = async (name) => {
     const userDecks = await getFileDecks();
-    if(!userDecks[name])
+    if (!userDecks[name])
         return `Deck not found: ${name}`;
     return {
         name,
@@ -185,7 +209,7 @@ const getSavedDeck = async (name) => {
 
 const deleteSavedDeck = async (name) => {
     const userDecks = await getFileDecks();
-    if(!userDecks[name])
+    if (!userDecks[name])
         return 'Deck not found';
     delete userDecks[name];
     await saveToFile(userDecks);
@@ -197,7 +221,7 @@ const updateSavedDeck = async (name, deckURL) => {
     const page = await browser.newPage();
     const deck = await getDeckWithLevel(deckURL, page);
     const userDecks = await getFileDecks();
-    if(!userDecks[name])
+    if (!userDecks[name])
         return 'Deck not found with that name';
     userDecks[name] = deck;
     browser.close();
@@ -205,4 +229,27 @@ const updateSavedDeck = async (name, deckURL) => {
     return `Deck updated: ${name}`;
 }
 
-export { getRandomDeck, getDeckWithLevel, getRandomDeckByLevel, getSavedDeck, getSavedDecks, deleteSavedDeck, updateSavedDeck, saveDeck};
+const searchDecks = async (numPages, filters) => {
+    let decks = [];
+    if (filters.level) {
+        decks.push(...await getDecksByLevel(numPages, filters.level));
+    } else {
+        decks.push(...await getDecksByLevel(numPages, 0));
+    }
+    
+    if (filters.commander) {
+        decks = decks.filter(deck => 
+            deck.commander.toLowerCase().includes(filters.commander.toLowerCase())
+        );
+    }
+
+    if (filters.type) {
+        decks = decks.filter(deck => 
+            deck.type.toLowerCase().includes(filters.type.toLowerCase())
+        );
+    }
+
+    return decks;
+}
+
+export { getRandomDeck, getDeckWithLevel, getDecksByLevel, getSavedDeck, getSavedDecks, deleteSavedDeck, updateSavedDeck, saveDeck, getRandomDeckByLevel, searchDecks };
