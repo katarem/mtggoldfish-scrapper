@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { getRandomDeck, getRandomDeckByLevel, getSavedDeck, deleteSavedDeck, updateSavedDeck, saveDeck, getSavedDecks, searchDecks } from "./functions.js";
+import { getSavedDeck, deleteSavedDeck, updateSavedDeck, saveDeck, getSavedDecks, searchDecks } from "./functions.js";
 import chalk from "chalk";
 
 const program = new Command();

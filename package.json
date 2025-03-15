@@ -3,7 +3,8 @@
   "version": "5.0.0",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "compile": "tsc src/main.ts"
   },
   "type": "module",
   "keywords": [],
@@ -18,5 +19,9 @@
   },
   "bin": {
     "rdeck": "./src/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
   }
 }

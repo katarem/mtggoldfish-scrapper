@@ -20,23 +20,6 @@ const getDecks = async (numPage, page) => {
     return decks;
 }
 
-const getRandomDeck = async (numPages) => {
-    const browser = await getBrowser();
-    const page = await browser.newPage();
-    const saltish = await browser.newPage();
-    let decks = []
-    for (let index = 1; index < numPages + 1; index++) {
-        const pageDecks = await getDecks(index, page);
-        decks.push(...pageDecks);
-    }
-    console.log('Obtained decks:', decks.length);
-    const randomDeckNumber = Math.floor(Math.random() * decks.length);
-    const randomDeckUrl = decks[randomDeckNumber];
-    const randomDeck = await getDeckWithLevel(randomDeckUrl, saltish);
-    browser.close();
-    return randomDeck;
-}
-
 const getConcurrentPages = (performance) => {
     if (performance === 'ultrafast') {
         return 40;
@@ -109,12 +92,6 @@ const getDecksByLevel = async (numPages, level, performance) => {
         await browser.close();
     }
 };
-
-const getRandomDeckByLevel = async (numPages, level, performance) => {
-    const decks = await getDecksByLevel(numPages, level, performance);
-    const randomDeckNumber = Math.floor(Math.random() * decks.length);
-    return decks[randomDeckNumber];
-}
 
 // Función auxiliar para procesar un chunk de URLs
 const processChunk = async (urls, page, targetLevel, process) => {
@@ -285,4 +262,4 @@ const searchDecks = async (numPages, filters) => {
     return decks;
 }
 
-export { getRandomDeck, getDeckWithLevel, getDecksByLevel, getSavedDeck, getSavedDecks, deleteSavedDeck, updateSavedDeck, saveDeck, getRandomDeckByLevel, searchDecks };
+export { getDeckWithLevel, getDecksByLevel, getSavedDeck, getSavedDecks, deleteSavedDeck, updateSavedDeck, saveDeck, searchDecks };
