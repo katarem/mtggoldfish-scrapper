@@ -1,4 +1,4 @@
-type Deck = {
+type LocalDeck = {
     name: string | null;
     link: string;
     commander: string;
@@ -12,3 +12,7 @@ type Deck = {
         synergy: string;
     }
 }
+
+type Deck = Omit<LocalDeck, 'name'>;
+
+export { LocalDeck, Deck };

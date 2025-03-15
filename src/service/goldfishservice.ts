@@ -1,9 +1,11 @@
 import { Page } from "puppeteer";
-import CardService from "./cardservice";
 import { TqdmProgress } from "node-console-progress-bar-tqdm";
-import { Performance, PerformanceValue } from "../model/performance";
+import { Performance, PerformanceValue } from "../model/performance.js";
+import { Deck } from "../model/deck.js";
+import CardService from "./cardservice.js";
 
 class GoldFishService extends CardService {
+
 
     pages: number = 1;
     performance: Performance = new Performance(PerformanceValue.MEDIUM);
@@ -43,10 +45,15 @@ class GoldFishService extends CardService {
                 step: 30,
             });
             const deckUrls: string[] = [];
-            for (let index = 1; index < 1 + 1; index++) {
-                const pageDecks = await this.fetchDecks(page);
-                deckUrls.push(...pageDecks);
-                this.progress.update();
+            for (let index = 1; index < this.pages + 1; index++) {
+                try {
+                    await page.goto(`https://www.mtggoldfish.com/deck/custom/commander?page=${index}#paper`)
+                    const pageDecks = await this.fetchDecks(page);
+                    deckUrls.push(...pageDecks);
+                    this.progress.update();
+                } catch (e) {
+                    // ignore
+                }
             }
             resolve(deckUrls);
         });
@@ -73,42 +80,40 @@ class GoldFishService extends CardService {
                 allDeckUrls.slice(index * chunkSize, (index + 1) * chunkSize)
             );
 
-            try {
-                const process = new TqdmProgress({
-                    total: allDeckUrls.length,
-                    description: 'Processing deck levels',
-                    unit: 'deck',
-                    progressBraces: ['', ''],
-                })
-                const results = await Promise.all(
-                    chunks.map((chunk, index) =>
-                        this.processChunk(chunk, pages[index], level, process)
-                    )
-                );
-                console.log();
-                let filteredDecks;
-                if (level > 0) {
-                    filteredDecks = results.flat().filter(deck => deck && deck.level === level);
-                    console.log('Decks of level', level + ':', filteredDecks.length);
-                } else {
-                    filteredDecks = results.flat().filter(deck => deck);
-                }
-                resolve(filteredDecks);
-            } finally {
-                await Promise.all(pages.map(page => page.close()));
-                await this.browser?.close();
+            this.progress = new TqdmProgress({
+                total: allDeckUrls.length,
+                description: 'Processing deck levels',
+                unit: 'deck',
+                progressBraces: ['', ''],
+                step: 1
+            })
+            const results = await Promise.all(
+                chunks.map((chunk, index) =>
+                    this.processChunk(chunk, pages[index], level, this.progress)
+                )
+            );
+            console.log();
+            let filteredDecks;
+            if (level > 0) {
+                filteredDecks = results.flat().filter(deck => deck && deck.level === level);
+                console.log('Decks of level', level + ':', filteredDecks.length);
+            } else {
+                filteredDecks = results.flat().filter(deck => deck);
             }
+            await Promise.all(pages.map(page => page.close()));
+            await this.browser?.close();
+            resolve(filteredDecks);
         });
     };
 
-    private processChunk(urls: string[], page: Page, targetLevel: number, progress: TqdmProgress): Promise<Deck[]> {
+    private async processChunk(urls: string[], page: Page, targetLevel: number, progress: TqdmProgress): Promise<Deck[]> {
         return new Promise<Deck[]>(async (resolve) => {
             const results: Deck[] = [];
             for (const url of urls) {
                 try {
                     const deckWithLevel = await this.getDeckWithLevel(url, page);
                     if (targetLevel === 0 || deckWithLevel.level === targetLevel) {
-                        results.push();
+                        results.push(deckWithLevel);
                     }
                 } catch (error) {
                     // ignoring error

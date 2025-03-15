@@ -3,8 +3,8 @@
   "version": "5.0.0",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "compile": "tsc src/main.ts"
+    "start": "node dist/main.js",
+    "compile": "tsc"
   },
   "type": "module",
   "keywords": [],
@@ -18,7 +18,7 @@
     "puppeteer": "^24.3.0"
   },
   "bin": {
-    "rdeck": "./src/index.js"
+    "rdeck": "./dist/main.js"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
