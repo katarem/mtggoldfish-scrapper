@@ -1,6 +1,6 @@
 {
   "name": "mtggoldfish-scrapper",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js"
@@ -11,8 +11,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "chalk": "^4.1.2",
     "commander": "^13.1.0",
-    "mtggoldfish-scrapper": "file:",
+    "node-console-progress-bar-tqdm": "^1.0.4",
     "puppeteer": "^24.3.0"
   },
   "bin": {

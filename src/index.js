@@ -2,33 +2,14 @@
 
 import { Command } from "commander";
 import { getRandomDeck, getRandomDeckByLevel, getSavedDeck, deleteSavedDeck, updateSavedDeck, saveDeck, getSavedDecks, searchDecks } from "./functions.js";
+import chalk from "chalk";
 
 const program = new Command();
 
 program
     .name("mtg-random-deck")
     .description("Get a random Magic: The Gathering deck from mtggoldfish.com")
-    .version('4.0.0');
-
-
-program
-    .command("level")
-    .description('Get a deck with specified level from mtggoldfish.com')
-    .argument('<level>', 'Level of the deck', (value) => parseInt(value, 10), 3)
-    .option('-p, --pages <pages>', 'Number of pages to search for a deck', (value) => parseInt(value, 10), 1)
-    .action(async (level, options) => {
-        const deck = await getRandomDeckByLevel(options.pages, level);
-        console.log('Obtained deck:',deck);
-    });
-
-program
-    .command("random")
-    .description('Get a random deck from mtggoldfish.com')
-    .option('-p --pages <pages>', 'Number of pages to search for a deck', (value) => parseInt(value, 10), 1)
-    .action(async (options) => {
-        const deck = await getRandomDeck(options.pages);
-        console.log('Obtained deck:',deck);
-    });    
+    .version('5.0.0');
 
 program
     .command("list")
@@ -55,7 +36,7 @@ program
     .argument('<url>', 'url of the deck', (url) => {
         const regex = /^https:\/\/www\.mtggoldfish\.com\/deck\/\d+#paper$/;
         if (!regex.test(url)) {
-            console.error('Invalid URL format. URL must match https://mtggoldfish.com/deck/{YOUR_DECK_ID}#paper');
+            console.log(chalk.red('Invalid URL format. URL must match https://mtggoldfish.com/deck/{YOUR_DECK_ID}#paper'));
             process.exit(1);
         }
         return url;
@@ -94,11 +75,19 @@ program
     .option('-l --level <level>', 'Level of the deck', (value) => parseInt(value, 10))
     .option('-c --commander <commander>', 'Commander of the deck')
     .option('-p --pages <pages>', 'Number of pages to search for a deck', (value) => parseInt(value, 10), 1)
+    .option('-m --mode <mode>', 'Mode of fetching deck', 'normal')
+    .option('-r --random', 'Random deck')
     .action(async (options) => {
-        if(!options.type && !options.level && !options.commander)
-            console.log("Can't search decks with no options")
-        else
-            console.log(await searchDecks(options.pages, options));
+        if (!['low', 'normal', 'high', 'ultra', 'fast', 'ultrafast'].includes(options.mode))
+            console.log(chalk.red('Invalid mode. Mode must be one of:'), 'low, normal, high, ultra, fast, ultrafast');
+        else if (!options.type && !options.level && !options.commander)
+            console.log(chalk.red("Can't search decks with no options"))
+        else if (options.random) {
+            const decks = await searchDecks(options.pages, options);
+            const deckIndex = Math.floor(Math.random() * decks.length);
+            console.log('Obtained deck:', decks[deckIndex]);
+        }
+        else console.log(await searchDecks(options.pages, options));
     });
 
 program.parse();

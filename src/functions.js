@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
-import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { getFileDecks, saveToFile } from './paths.js';
+import { TqdmProgress } from 'node-console-progress-bar-tqdm';
 const browser = undefined;
 const getBrowser = async () => {
     if (!browser) {
@@ -17,13 +17,11 @@ const getDecks = async (numPage, page) => {
         return Array.from(document.querySelectorAll('.archetype-tile'))
             .map(deck => deck.querySelector('a').href);
     });
-    console.log(`Page ${numPage}: ${decks.length} decks`)
     return decks;
 }
 
 const getRandomDeck = async (numPages) => {
     const browser = await getBrowser();
-
     const page = await browser.newPage();
     const saltish = await browser.newPage();
     let decks = []
@@ -31,7 +29,7 @@ const getRandomDeck = async (numPages) => {
         const pageDecks = await getDecks(index, page);
         decks.push(...pageDecks);
     }
-    console.log('Obtained decks:', decks.length)
+    console.log('Obtained decks:', decks.length);
     const randomDeckNumber = Math.floor(Math.random() * decks.length);
     const randomDeckUrl = decks[randomDeckNumber];
     const randomDeck = await getDeckWithLevel(randomDeckUrl, saltish);
@@ -39,19 +37,43 @@ const getRandomDeck = async (numPages) => {
     return randomDeck;
 }
 
-const getDecksByLevel = async (numPages, level) => {
+const getConcurrentPages = (performance) => {
+    if (performance === 'ultrafast') {
+        return 40;
+    } else if (performance === 'fast') {
+        return 30;
+    } else if (performance === 'ultra') {
+        return 20;
+    } else if (performance === 'high') {
+        return 10;
+    } else if (performance === 'normal') {
+        return 5;
+    } else {
+        return 2;
+    }
+}
+
+const getDecksByLevel = async (numPages, level, performance) => {
     const browser = await getBrowser();
 
     const goldfish = await browser.newPage();
     const allDeckUrls = [];
 
+    const process = new TqdmProgress({
+        total: 30 * numPages,
+        description: 'Searching decks',
+        unit: 'deck',
+        progressBraces: ['', ''],
+        step: 30,
+    })
     for (let index = 1; index < numPages + 1; index++) {
         const pageDecks = await getDecks(index, goldfish);
         allDeckUrls.push(...pageDecks);
+        process.update();
     }
+    console.log();
     console.log('Total deck URLs found:', allDeckUrls.length);
-
-    const MAX_CONCURRENT = 10;
+    const MAX_CONCURRENT = getConcurrentPages(performance);
     const pages = await Promise.all(
         Array(MAX_CONCURRENT).fill(0).map(() => browser.newPage())
     );
@@ -62,11 +84,18 @@ const getDecksByLevel = async (numPages, level) => {
     );
 
     try {
+        const process = new TqdmProgress({
+            total: allDeckUrls.length,
+            description: 'Processing deck levels',
+            unit: 'deck',
+            progressBraces: ['', ''],
+        })
         const results = await Promise.all(
             chunks.map((chunk, index) =>
-                processChunk(chunk, pages[index], level)
+                processChunk(chunk, pages[index], level, process)
             )
         );
+        console.log();
         let filteredDecks;
         if (level > 0) {
             filteredDecks = results.flat().filter(deck => deck && deck.level === level);
@@ -81,14 +110,14 @@ const getDecksByLevel = async (numPages, level) => {
     }
 };
 
-const getRandomDeckByLevel = async (numPages, level) => {
-    const decks = await getDecksByLevel(numPages, level);
+const getRandomDeckByLevel = async (numPages, level, performance) => {
+    const decks = await getDecksByLevel(numPages, level, performance);
     const randomDeckNumber = Math.floor(Math.random() * decks.length);
     return decks[randomDeckNumber];
 }
 
 // Función auxiliar para procesar un chunk de URLs
-const processChunk = async (urls, page, targetLevel) => {
+const processChunk = async (urls, page, targetLevel, process) => {
     const results = [];
     for (const url of urls) {
         try {
@@ -97,7 +126,9 @@ const processChunk = async (urls, page, targetLevel) => {
                 results.push(deckWithLevel);
             }
         } catch (error) {
-            console.error('Failed to get deck details:', url);
+            // ignoring error
+        } finally {
+            process.update();
         }
     }
     return results;
@@ -114,6 +145,8 @@ const getDeckWithLevel = async (deck, page) => {
     await page.keyboard.press('Enter')
 
     await page.waitForSelector('span#recharts_measurement_span')
+    
+    await page.setDefaultTimeout(5000)
 
     const level = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('span')).map(e => e.textContent)
@@ -232,19 +265,19 @@ const updateSavedDeck = async (name, deckURL) => {
 const searchDecks = async (numPages, filters) => {
     let decks = [];
     if (filters.level) {
-        decks.push(...await getDecksByLevel(numPages, filters.level));
+        decks.push(...await getDecksByLevel(numPages, filters.level, filters.mode));
     } else {
-        decks.push(...await getDecksByLevel(numPages, 0));
+        decks.push(...await getDecksByLevel(numPages, 0, filters.mode));
     }
-    
+
     if (filters.commander) {
-        decks = decks.filter(deck => 
+        decks = decks.filter(deck =>
             deck.commander.toLowerCase().includes(filters.commander.toLowerCase())
         );
     }
 
     if (filters.type) {
-        decks = decks.filter(deck => 
+        decks = decks.filter(deck =>
             deck.type.toLowerCase().includes(filters.type.toLowerCase())
         );
     }
