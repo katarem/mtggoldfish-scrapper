@@ -15,7 +15,10 @@
     "chalk": "^4.1.2",
     "commander": "^13.1.0",
     "node-console-progress-bar-tqdm": "^1.0.4",
-    "puppeteer": "^24.3.0"
+    "puppeteer": "^24.3.0",
+    "reflect-metadata": "^0.2.2",
+    "sqlite3": "^5.1.7",
+    "typeorm": "^0.3.21"
   },
   "bin": {
     "rdeck": "./dist/main.js"

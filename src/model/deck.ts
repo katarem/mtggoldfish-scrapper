@@ -1,5 +1,4 @@
-type LocalDeck = {
-    name: string | null;
+export type Deck = {
     link: string;
     commander: string;
     user: string;
@@ -11,8 +10,4 @@ type LocalDeck = {
         wincons: string;
         synergy: string;
     }
-}
-
-type Deck = Omit<LocalDeck, 'name'>;
-
-export { LocalDeck, Deck };
+};

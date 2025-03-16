@@ -8,6 +8,9 @@ import chalk from "chalk";
 import CommandService from "./service/commandservice.js";
 import { PerformanceValue } from "./model/performance.js";
 
+import "reflect-metadata";
+import { AppDataSource } from "./data-source.js";
+
 const program: Command = new Command();
 
 let service: CommandService = new CommandService();
@@ -28,6 +31,7 @@ program
     .option('-r --random', 'Gets a Random Deck from the search', false)
     .option('-m --mode <mode>', 'Mode to fectch', (arg) => arg ? getEnumValue(PerformanceValue, arg) : PerformanceValue.MEDIUM, PerformanceValue.MEDIUM)
     .action(async (options: SearchOptions) => {
+        await AppDataSource.initialize();
         if (options.random) {
             const deck = await service.getRandom(options);
             console.log(chalk.green(`Found a random deck:`), deck);
