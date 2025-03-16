@@ -1,5 +1,5 @@
 enum CardWebsite {
-    GOLDFISH = "goldfish",
+    MTGGOLDFISH = "mtggoldfish",
     MOXFIELD = "moxfield"
 }
 

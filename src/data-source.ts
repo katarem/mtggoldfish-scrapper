@@ -4,9 +4,9 @@ import { Grades } from "./entity/grades.js";
 
 export const AppDataSource = new DataSource({
     type: "sqlite",
-    database: "data",
+    database: "data/data.sqlite",
     synchronize: true,
-    logging: true,
+    logging: false,
     entities: [LocalDeck, Grades],
     subscribers: [],
     migrations: [],

@@ -6,7 +6,6 @@ export class DatabaseService {
 
     private static instance: DatabaseService;
     private localDeckRepository: Repository<LocalDeck> | null = null;
-    // private gradesRepository: Repository<Grades> | null = null;
 
     static async getInstance(): Promise<DatabaseService> {
         if (!AppDataSource.isInitialized)
@@ -14,14 +13,16 @@ export class DatabaseService {
         if (!DatabaseService.instance) {
             DatabaseService.instance = new DatabaseService();
             DatabaseService.instance.localDeckRepository = AppDataSource.getRepository(LocalDeck);
-            // DatabaseService.instance.gradesRepository = AppDataSource.getRepository(Grades);
         }
         return DatabaseService.instance;
     }
 
+    async close(): Promise<void> {
+        await AppDataSource.destroy();
+    }
 
-    async getDeck(name: string): Promise<LocalDeck | null> {
-        return await DatabaseService.instance.localDeckRepository?.findOne({ where: { name } }) ?? null;
+    async getDeck(id: string): Promise<LocalDeck | null> {
+        return await DatabaseService.instance.localDeckRepository?.findOneBy({ id }) ?? null;
     }
 
     async saveDeck(deck: LocalDeck): Promise<LocalDeck | null> {

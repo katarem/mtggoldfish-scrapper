@@ -59,7 +59,19 @@ class GoldFishService extends CardService {
         });
     }
 
-
+    getDeck(url: string): Promise<Deck | null> {
+        return new Promise<Deck | null>(async (resolve, reject) => {
+            try {
+                await this.getBrowser();
+                const page = await this.browser!!.newPage();
+                const deck = await this.getDeckWithLevel(url, page);
+                await this.browser!!.close();
+                resolve(deck);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 
     getDecksByLevel(level: number): Promise<Deck[]> {
         return new Promise<Deck[]>(async (resolve) => {

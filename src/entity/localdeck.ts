@@ -1,12 +1,10 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { Grades } from "./grades.js";
 
 @Entity()
 export class LocalDeck {
-    @Column()
+    @PrimaryColumn()
     id!: string;
-    @Column()
-    name!: string;
     @Column()
     link!: string;
     @Column()
