@@ -4,7 +4,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node dist/main.js",
-    "compile": "tsc"
+    "build": "tsc"
   },
   "type": "module",
   "keywords": [],

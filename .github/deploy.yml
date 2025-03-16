@@ -1,0 +1,31 @@
+name: Publish library
+run-name: ${{ github.actor }} is deploying to npmjs
+on:
+  push:
+    branch:
+      - master
+jobs:
+  Deploy:
+  runs-on: ubuntu-latest
+    steps:
+    - name: Clone Repository
+      uses: actions/checkout@v2
+      run: echo "❇️ Cloned repository"
+
+    - name: Install Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '22'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Build Library
+      run: npm run build
+
+    - name: Publish Library to NPMjs
+      uses: JS-DevTools/npm-publish@v1
+      with:
+        access_token: ${{ secrets.NPM_TOKEN }}
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -15,7 +15,7 @@ abstract class CardService {
 
     async getBrowser() {
         if (!this.browser)
-            this.browser = await puppeteer.launch({ headless: false });
+            this.browser = await puppeteer.launch({ headless: true });
         return this.browser;
     }
 

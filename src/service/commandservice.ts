@@ -25,11 +25,14 @@ class CommandService {
                     let decks: Deck[] = await this.goldfishService.getDecksByLevel(options.level);
                     if (options.commander) {
                         decks = decks.filter(deck => options.commander ? deck.commander.toLocaleLowerCase().includes(options.commander?.toLocaleLowerCase()) : true)
-                        console.log(chalk.blue('Decks found with commander matching'), chalk.underline(options.commander), chalk.blue(options.level !== 0 ? `of level ${options.level}` : '' + ':'), decks.length)
+                        console.log(chalk.blue('Decks found with commander matching'), '\'' + chalk.underline(options.commander) + '\'', chalk.blue(options.level !== 0 ? `of level ${options.level}` : '' + ':'), decks.length)
                     }
                     if (options.type) {
                         decks = decks.filter(deck => options.type ? deck.type.toLocaleLowerCase().includes(options.type?.toLocaleLowerCase()) : true)
-                        console.log(chalk.blue('Decks found with type', chalk.underline(options.type), chalk.blue(':'), decks.length))
+                        if (options.commander)
+                            console.log(chalk.blue('Decks found with type matching'), '\'' + chalk.underline(options.type) + '\'', chalk.blue('and commander matching'), '\'' + chalk.underline(options.commander) + '\'', chalk.blue(':'), decks.length)
+                        else
+                            console.log(chalk.blue('Decks found with type matching'), '\'' + chalk.underline(options.type) + '\'', chalk.blue(':'), decks.length);
                     }
                     resolve(decks);
                     break;
