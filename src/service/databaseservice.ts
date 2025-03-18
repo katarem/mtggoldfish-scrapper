@@ -30,8 +30,9 @@ export class DatabaseService {
     }
 
     async updateDeck(id: string, deck: LocalDeck): Promise<boolean> {
-        const updateResult = await DatabaseService.instance.localDeckRepository?.update(id, deck) ?? null;
-        return updateResult ? true : false;
+       const deleteResult = await this.deleteDeck(id);
+       if(!deleteResult) return false;
+       return await this.saveDeck(deck) ? true : false;
     }
 
     async deleteDeck(id: string): Promise<boolean> {

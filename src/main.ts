@@ -9,9 +9,7 @@ import CommandService from "./service/commandservice.js";
 import { PerformanceValue } from "./model/performance.js";
 
 import "reflect-metadata";
-import { DatabaseService } from "./service/databaseservice.js";
 import { randomUUID } from "crypto";
-import { mapToEntity } from "./mapper/mapper.js";
 
 const program: Command = new Command();
 
@@ -44,9 +42,11 @@ program
 program
     .command('list')
     .description('List all local decks')
-    .action(async () => {
-        const databaseService = await DatabaseService.getInstance();
-        const decks = await databaseService.getAll();
+    .option('-l --level <level>', 'deck level to search for', (arg) => parseInt(arg, 10), 0)
+    .option('-c --commander <commander>', 'Commander to search for')
+    .option('-t --type <type>', 'Deck Type')
+    .action(async (filters: SearchOptions) => {
+        const decks = await commandService.getAllDecks(filters);
         console.log(chalk.green(`Found ${decks.length} local decks:`), decks);
     });
 
@@ -76,10 +76,19 @@ program
     .argument('<link>', 'Link to the deck')
     .action(async (id: string, link: string) => {
         const deck = await commandService.updateDeck(id, link);
-        if (deck) console.log(chalk.green(`Found deck:`), deck);
-        else console.log(chalk.red(`Deck not found with ID: ${id}`));
+        if (deck) console.log(chalk.green(`Updated deck with ID:`), id);
+        else console.log(chalk.red(`Deck not found with ID:`), id);
     });
 
+program
+    .command('delete')
+    .description('Delete a deck from local storage')
+    .argument('<id>', 'Deck ID to get')
+    .action(async (id: string) => {
+        const deck = await commandService.deleteDeck(id);
+        if (deck) console.log(chalk.green(`Deleted deck with ID:`), id);
+        else console.log(chalk.red(`Deck not found with ID:`), id);
+    });
 
 
 program.parse()

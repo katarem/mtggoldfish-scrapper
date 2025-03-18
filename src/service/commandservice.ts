@@ -115,7 +115,9 @@ class CommandService {
             const deck = await this.getDeck(link);
             if (deck) {
                 const databaseService = await DatabaseService.getInstance();
-                const updated = await databaseService.updateDeck(id, mapToEntity(deck, id));
+                const localDeck = mapToEntity(deck, id);
+                console.log('local', localDeck);
+                const updated = await databaseService.updateDeck(id, localDeck);
                 await databaseService.close();
                 resolve(updated);
             } else {
@@ -130,6 +132,23 @@ class CommandService {
             const deleted = await databaseService.deleteDeck(id);
             await databaseService.close();
             resolve(deleted);
+        });
+    }
+
+    async getAllDecks(filters: SearchOptions): Promise<LocalDeck[]> {
+        return new Promise<LocalDeck[]>(async (resolve) => {
+            const databaseService = await DatabaseService.getInstance();
+            let decks = await databaseService.getAll();
+            await databaseService.close();
+
+            if(filters && filters.commander) 
+                decks = decks.filter(deck => deck.commander.toLocaleLowerCase().includes(filters!!.commander!!.toLocaleLowerCase()));
+            if(filters && filters.type)
+                decks = decks.filter(deck => deck.type.toLocaleLowerCase().includes(filters!!.type!!.toLocaleLowerCase()));
+            if(filters && filters.level)
+                decks = decks.filter(deck => deck.level === filters.level);
+            
+            resolve(decks);
         });
     }
 
