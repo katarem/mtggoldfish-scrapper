@@ -10,7 +10,6 @@ jobs:
     steps:
     - name: Clone Repository
       uses: actions/checkout@v2
-      run: echo "❇️ Cloned repository"
 
     - name: Install Node.js
       uses: actions/setup-node@v2
