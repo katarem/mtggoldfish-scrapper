@@ -2,11 +2,11 @@ name: Publish library
 run-name: ${{ github.actor }} is deploying to npmjs
 on:
   push:
-    branch:
+    branches:
       - master
 jobs:
   Deploy:
-  runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
     - name: Clone Repository
       uses: actions/checkout@v2
@@ -27,5 +27,3 @@ jobs:
       uses: JS-DevTools/npm-publish@v1
       with:
         access_token: ${{ secrets.NPM_TOKEN }}
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
