@@ -9,12 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Install Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
         node-version: '22'
+        registry-url: 'https://registry.npmjs.org'
 
     - name: Install Dependencies
       run: npm install
@@ -23,6 +24,7 @@ jobs:
       run: npm run build
 
     - name: Publish Library to NPMjs
-      uses: JS-DevTools/npm-publish@v1
-      with:
-        access_token: ${{ secrets.NPM_TOKEN }}
+    - run: npm ci
+    - run: npm publish --provenance --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
