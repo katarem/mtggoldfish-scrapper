@@ -113,7 +113,3 @@ mtggoldfish-scrapper delete abc123
 - [TypeORM](https://www.npmjs.com/package/typeorm) - Database ORM
 - [Commander](https://www.npmjs.com/package/commander) - CLI framework
 - [Chalk](https://www.npmjs.com/package/chalk) - Terminal styling
-
-## License
-
-ISC
