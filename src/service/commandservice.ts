@@ -18,33 +18,21 @@ class CommandService {
 
     async search(options: SearchOptions): Promise<Deck[]> {
         return new Promise<Deck[]>(async (resolve) => {
-            if (!options.web) {
-                console.log(chalk.red('Invalid website.'))
-                process.exit(1)
+            this.goldfishService.setPages(options.pages ? options.pages : 1);
+            this.goldfishService.setPerformance(new Performance(options.mode));
+            let decks: Deck[] = await this.goldfishService.getDecksByLevel(options.level);
+            if (options.commander) {
+                decks = decks.filter(deck => options.commander ? deck.commander.toLocaleLowerCase().includes(options.commander?.toLocaleLowerCase()) : true)
+                console.log(chalk.blue('Decks found with commander matching'), '\'' + chalk.underline(options.commander) + '\'', chalk.blue(options.level !== 0 ? `of level ${options.level}` : '' + ':'), decks.length)
             }
-            switch (options.web) {
-                case CardWebsite.MTGGOLDFISH:
-                    this.goldfishService.setPages(options.pages ? options.pages : 1);
-                    this.goldfishService.setPerformance(new Performance(options.mode));
-                    let decks: Deck[] = await this.goldfishService.getDecksByLevel(options.level);
-                    if (options.commander) {
-                        decks = decks.filter(deck => options.commander ? deck.commander.toLocaleLowerCase().includes(options.commander?.toLocaleLowerCase()) : true)
-                        console.log(chalk.blue('Decks found with commander matching'), '\'' + chalk.underline(options.commander) + '\'', chalk.blue(options.level !== 0 ? `of level ${options.level}` : '' + ':'), decks.length)
-                    }
-                    if (options.type) {
-                        decks = decks.filter(deck => options.type ? deck.type.toLocaleLowerCase().includes(options.type?.toLocaleLowerCase()) : true)
-                        if (options.commander)
-                            console.log(chalk.blue('Decks found with type matching'), '\'' + chalk.underline(options.type) + '\'', chalk.blue('and commander matching'), '\'' + chalk.underline(options.commander) + '\'', chalk.blue(':'), decks.length)
-                        else
-                            console.log(chalk.blue('Decks found with type matching'), '\'' + chalk.underline(options.type) + '\'', chalk.blue(':'), decks.length);
-                    }
-                    resolve(decks);
-                    break;
-                case CardWebsite.MOXFIELD:
-                    // TODO: Implement MoxfieldService
-                    console.log(chalk.red('Moxfield is not supported yet.'))
-                    process.exit(1);
+            if (options.type) {
+                decks = decks.filter(deck => options.type ? deck.type.toLocaleLowerCase().includes(options.type?.toLocaleLowerCase()) : true)
+                if (options.commander)
+                    console.log(chalk.blue('Decks found with type matching'), '\'' + chalk.underline(options.type) + '\'', chalk.blue('and commander matching'), '\'' + chalk.underline(options.commander) + '\'', chalk.blue(':'), decks.length)
+                else
+                    console.log(chalk.blue('Decks found with type matching'), '\'' + chalk.underline(options.type) + '\'', chalk.blue(':'), decks.length);
             }
+            resolve(decks);
         });
     }
 
@@ -141,13 +129,13 @@ class CommandService {
             let decks = await databaseService.getAll();
             await databaseService.close();
 
-            if(filters && filters.commander) 
+            if (filters && filters.commander)
                 decks = decks.filter(deck => deck.commander.toLocaleLowerCase().includes(filters!!.commander!!.toLocaleLowerCase()));
-            if(filters && filters.type)
+            if (filters && filters.type)
                 decks = decks.filter(deck => deck.type.toLocaleLowerCase().includes(filters!!.type!!.toLocaleLowerCase()));
-            if(filters && filters.level)
+            if (filters && filters.level)
                 decks = decks.filter(deck => deck.level === filters.level);
-            
+
             resolve(decks);
         });
     }

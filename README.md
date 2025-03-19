@@ -1,21 +1,31 @@
 # MTG Goldfish Commander Deck Scraper
 
-A Node.js application that scrapes Commander deck lists from MTGGoldfish.com and returns a random deck URL.
+A TypeScript application that scrapes Commander deck lists from MTGGoldfish.com, analyzes their power level using CommanderSalt.com, and provides deck management functionality.
 
 ## Features
 
 - Scrapes Commander deck lists from MTGGoldfish.com
-- Configurable number of pages to scrape via command line argument
-- Returns a random deck URL from the collected decks
-- Uses Puppeteer for web scraping
+- Analyzes deck power levels using CommanderSalt.com
+- Local deck storage with SQLite database
+- Configurable performance modes for scraping
+- Filter decks by commander, power level, and deck type
 - Global CLI command support
 
 ## Prerequisites
 
 - Node.js (v14 or higher)
 - npm (Node Package Manager)
+- SQLite3
 
 ## Installation
+
+### From NPM Registry
+
+Install globally from npm:
+
+```bash
+npm install -g mtggoldfish-scrapper
+```
 
 ### Local Installation
 
@@ -24,10 +34,11 @@ A Node.js application that scrapes Commander deck lists from MTGGoldfish.com and
 ```bash
 npm install
 ```
-
-### Global Installation
-
-To use the tool from anywhere in your command line:
+3. Build the project:
+```bash
+npm run build
+```
+4. To use the tool from anywhere in your command line:
 
 ```bash
 npm install -g .
@@ -35,45 +46,73 @@ npm install -g .
 
 ## Usage
 
-### As a local package:
+The application provides several commands for managing and searching MTG decks:
 
 ```bash
-npm start [pages]
+mtggoldfish-scrapper [command] [options]
 ```
 
-### As a global command:
+### Available Commands
 
-After global installation, you can use the `rdeck` command from anywhere:
+#### Search for Decks
+```bash
+mtggoldfish-scrapper search [options]
+
+Options:
+  -l, --level <number>       Deck power level to filter
+  -c, --commander <string>   Commander name to search for
+  -w, --web <string>        Website to search (default: "mtggoldfish")
+  -t, --type <string>       Deck type to filter
+  -p, --pages <number>      Number of pages to fetch (default: 1)
+  -r, --random             Get a random deck from results
+  -m, --mode <string>      Performance mode (low|medium|high|ultra|fast|ultrafast)
+```
+
+#### Manage Local Decks
+```bash
+# List saved decks
+mtggoldfish-scrapper list [options]
+  -l, --level <number>      Filter by deck level
+  -c, --commander <string>  Filter by commander
+  -t, --type <string>      Filter by deck type
+
+# Save a deck
+mtggoldfish-scrapper save <url> [options]
+  -n, --name <string>      Custom name for the deck
+
+# Get a specific deck
+mtggoldfish-scrapper get <id>
+
+# Update a deck
+mtggoldfish-scrapper update <id> <url>
+
+# Delete a deck
+mtggoldfish-scrapper delete <id>
+```
+
+### Examples
 
 ```bash
-rdeck [pages]
+# Search for decks
+mtggoldfish-scrapper search -c "Atraxa" -p 3
+mtggoldfish-scrapper search -l 8 -t "combo" -m fast
+
+# Get a random deck
+mtggoldfish-scrapper search -r -p 5
+
+# Save and manage decks
+mtggoldfish-scrapper save https://www.mtggoldfish.com/deck/123456 -n "My Combo Deck"
+mtggoldfish-scrapper list -c "Zur"
+mtggoldfish-scrapper get abc123
+mtggoldfish-scrapper delete abc123
 ```
-
-Where `[pages]` is an optional argument to specify the number of pages to scrape. If not provided, it defaults to 5 pages.
-
-Examples:
-```bash
-rdeck      # Scrapes 5 pages (default)
-rdeck 10   # Scrapes 10 pages
-rdeck 1    # Scrapes just 1 page
-```
-
-The script will:
-1. Scrape the specified number of Commander deck pages from MTGGoldfish
-2. Display the number of decks found on each page
-3. Show the total number of decks collected
-4. Output a random deck URL from the collection
-
-## Project Structure
-
-- src/
-  - index.js - Main entry point and CLI command
-  - functions.js - Core scraping functionality
-- package.json - Project configuration and dependencies
 
 ## Dependencies
 
-- [Puppeteer](https://www.npmjs.com/package/puppeteer) (^24.3.0) - Headless Chrome Node.js API
+- [Puppeteer](https://www.npmjs.com/package/puppeteer) - Web scraping
+- [TypeORM](https://www.npmjs.com/package/typeorm) - Database ORM
+- [Commander](https://www.npmjs.com/package/commander) - CLI framework
+- [Chalk](https://www.npmjs.com/package/chalk) - Terminal styling
 
 ## License
 

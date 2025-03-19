@@ -24,7 +24,6 @@ program
     .description('Search for decks')
     .option('-l --level <level>', 'deck level to search for', (arg) => parseInt(arg, 10), 0)
     .option('-c --commander <commander>', 'Commander to search for')
-    .option('-w --web <web>', 'Web to fetch cards from', (arg) => arg ? getEnumValue(CardWebsite, arg) : CardWebsite.MTGGOLDFISH, CardWebsite.MTGGOLDFISH)
     .option('-t --type <type>', 'Deck Type')
     .option('-p --pages <pages>', 'Number of pages to fetch', (arg) => parseInt(arg, 10), 1)
     .option('-r --random', 'Gets a Random Deck from the search', false)
