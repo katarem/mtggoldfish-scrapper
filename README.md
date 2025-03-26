@@ -61,7 +61,6 @@ mtggoldfish-scrapper search [options]
 Options:
   -l, --level <number>       Deck power level to filter
   -c, --commander <string>   Commander name to search for
-  -w, --web <string>        Website to search (default: "mtggoldfish")
   -t, --type <string>       Deck type to filter
   -p, --pages <number>      Number of pages to fetch (default: 1)
   -r, --random             Get a random deck from results

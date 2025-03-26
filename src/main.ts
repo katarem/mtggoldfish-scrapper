@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import CardWebsite from "./model/cardwebsite.js";
 import { getEnumValue } from "./utils/utils.js";
 import SearchOptions from "./model/searchoptions.js";
 import chalk from "chalk";
@@ -17,7 +16,7 @@ let commandService: CommandService = new CommandService();
 program
     .name('mtggoldfish-scrapper')
     .description('CLI for getting decks from different MTG sites')
-    .version("6.0.0");
+    .version("6.1.0");
 
 program
     .command('search')
